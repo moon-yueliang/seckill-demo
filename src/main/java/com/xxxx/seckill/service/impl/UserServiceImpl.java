@@ -63,21 +63,51 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         // 生成cookie
         String ticket = UUIDUtil.uuid();
         //将用户信息存入redis
-        redisTemplate.opsForValue().set("user"+ticket,user);
+        redisTemplate.opsForValue().set("user:"+ticket,user);
         // request.getSession().setAttribute(ticket,user);
         CookieUtil.setCookie(request,response,"userTicket",ticket);
-        return RespBean.success();
+        return RespBean.success(ticket);
     }
 
+    /**
+     * 根据cookie获取用户
+     * @param userTicket
+     * @param request
+     * @param response
+     * @return
+     */
     @Override
     public User getUserByCookie(String userTicket,HttpServletRequest request,HttpServletResponse response) {
         if (StringUtils.isEmpty(userTicket)) {
             return null;
         }
-        User user = (User) redisTemplate.opsForValue().get("user:"+userTicket);
+        User user = (User)redisTemplate.opsForValue().get("user:"+userTicket);
         if (user!=null) {
             CookieUtil.setCookie(request,response,"userTicket",userTicket);
         }
         return user;
+    }
+
+    /**
+     * 更新密码
+     * @param userTicket
+     * @param password
+     * @param request
+     * @param response
+     * @return
+     */
+    @Override
+    public RespBean updatePassword(String userTicket, String password,HttpServletRequest request,HttpServletResponse response) {
+        User user = getUserByCookie(userTicket,request,response);
+        if(user==null) {
+            throw new GlobalException(RespBeanEnum.MOBILE_NOT_EXIST);
+        }
+        user.setPassword(MD5Util.inputPassToDBPass(password,user.getSalt()));
+        int result = userMapper.updateById(user);
+        if(1==result) {
+            redisTemplate.delete("user:"+userTicket);
+            return RespBean.success();
+        }
+        return RespBean.error(RespBeanEnum.PASSWORD_UPDATE_FAIL);
     }
 }
