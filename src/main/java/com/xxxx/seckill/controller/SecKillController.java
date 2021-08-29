@@ -18,6 +18,7 @@ import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -81,17 +82,19 @@ public class SecKillController implements InitializingBean {
      * windows优化前QPS 600
      *         缓存QPS 1200
      *         优化QPS 1745
-     *
-     * @return
      */
-    @RequestMapping(value = "/doSeckill",method = RequestMethod.POST)
+    @RequestMapping(value = "/{path}/doSeckill",method = RequestMethod.POST)
     @ResponseBody
-    public RespBean doSecKill(User user, Long goodsId) {
+    public RespBean doSeckill(@PathVariable String path, User user, Long goodsId) {
         if(user==null) {
             return RespBean.error(RespBeanEnum.SESSION_ERROR);
         }
 
         ValueOperations valueOperations = redisTemplate.opsForValue();
+        boolean check = orderService.checkPath(user, goodsId, path);
+        if(!check) {
+            return RespBean.error(RespBeanEnum.REQUEST_ILLEGAL);
+        }
         //判断是否重复抢购
         SeckillOrder seckillOrder =
                 (SeckillOrder) redisTemplate.opsForValue().get("order:"+user.getId()+":"+goodsId);
@@ -130,6 +133,16 @@ public class SecKillController implements InitializingBean {
         }
         Long orderId = seckillOrderService.getResult(user,goodsId);
         return RespBean.success(orderId);
+    }
+
+    @RequestMapping(value = "/path",method=RequestMethod.GET)
+    @ResponseBody
+    public RespBean getPath(User user, Long goodsId) {
+        if (user == null) {
+            return RespBean.error(RespBeanEnum.SESSION_ERROR);
+        }
+        String str = orderService.createPath(user, goodsId);
+        return RespBean.success(str);
     }
 
     /**

@@ -151,7 +151,7 @@ public class UserUtil {
             users.add(user);
         }
         System.out.println("create user");
-         // //插入数据库
+//         // //插入数据库
 //         Connection conn = getConn();
 //         String sql = "insert into t_user(login_count, nickname, register_date, salt, password, id)values(?,?,?,?,?,?)";
 //         PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -171,7 +171,8 @@ public class UserUtil {
 //         System.out.println("insert to db");
         //登录，生成userTicket
         String urlString = "http://localhost:8080/login/doLogin";
-        File file = new File("C:\\Users\\jianghao\\Desktop\\config.txt");
+        // File file = new File("C:\\Users\\jianghao\\Desktop\\config.txt");
+        File file = new File("C:\\Users\\31318\\Desktop\\config.txt");
         if (file.exists()) {
             file.delete();
         }
