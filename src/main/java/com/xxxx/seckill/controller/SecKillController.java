@@ -174,6 +174,7 @@ public class SecKillController implements InitializingBean {
         response.setHeader("Pargam","No-cache");
         response.setHeader("Cache-Control","no-cache");
         response.setDateHeader("Expires",0);
+
         //生成验证码
         ArithmeticCaptcha captcha = new ArithmeticCaptcha(130,32,3);
         redisTemplate.opsForValue().set("captcha:"+user.getId()+":"+goodsId,captcha.text(),300, TimeUnit.SECONDS);
